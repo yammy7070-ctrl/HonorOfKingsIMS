@@ -1,13 +1,29 @@
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-void main() {
-    //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-    // to see how IntelliJ IDEA suggests fixing it.
-    IO.println(String.format("Hello and welcome!"));
+import model.Hero;
+import model.Player;
+import util.ConsoleUtil;
+import util.DataInitializer;
 
-    for (int i = 1; i <= 5; i++) {
-        //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-        // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-        IO.println("i = " + i);
+public class Main {
+    public static void main(String[] args) {
+        DataInitializer.initialize();
+
+        ConsoleUtil.printTitle("Honor of Kings IMS - Data Check");
+        System.out.println("Teams:     " + DataInitializer.getTeams().size());
+        System.out.println("Players:   " + DataInitializer.getPlayers().size());
+        System.out.println("Heroes:    " + DataInitializer.getHeroes().size());
+        System.out.println("Equipment: " + DataInitializer.getEquipment().size());
+        System.out.println("Matches:   " + DataInitializer.getMatches().size());
+        System.out.println("Admins:    " + DataInitializer.getAdmins().size());
+
+        ConsoleUtil.printDivider();
+        Player p = DataInitializer.getPlayers().get(0);
+        System.out.println(p.getInfo());
+        System.out.println("Win rate: " + ConsoleUtil.formatPercent(p.getWinRate()));
+        System.out.println("Owned heroes: " + p.getOwnedHeroes());
+
+        Hero h = DataInitializer.getHeroes().get(0);
+        System.out.println(h + " stats: " + h.getStats());
+        System.out.println("Equipped: " + h.getEquippedItems());
+        System.out.println(DataInitializer.getMatches().get(0).getTeam1Picks());
     }
 }
