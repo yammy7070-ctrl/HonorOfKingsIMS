@@ -1,3 +1,8 @@
+import exception.DuplicateIdException;
+import enums.HeroType;
+import enums.EquipmentType;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import exception.RecordNotFoundException;
 import model.Equipment;
 import model.Hero;
@@ -78,6 +83,7 @@ public class Main {
         System.out.println("4. Equipment statistics");
         System.out.println("5. Match history");
         System.out.println("6. Leaderboard");
+        System.out.println("7. Data management (add / delete / edit)");
         System.out.println("0. Log out");
         int choice = InputHelper.readInt("Choose: ");
         switch (choice) {
@@ -87,6 +93,7 @@ public class Main {
             case 4: equipmentStatistics(); break;
             case 5: matchHistory(); break;
             case 6: leaderboard(); break;
+            case 7: dataManagement(); break;
             case 0: return 0;
             default: System.out.println("Invalid choice.");
         }
@@ -272,5 +279,167 @@ public class Main {
     private static String teamName(String teamId) {
         Team t = data.getTeam(teamId);
         return (t == null) ? teamId : t.getName();
+    }
+    // ---------------- data management (admin only) ----------------
+    private static void dataManagement() {
+        while (true) {
+            ConsoleUtil.printTitle("Data Management (Admin)");
+            System.out.println("1. Add player       2. Delete player    3. Edit player");
+            System.out.println("4. Add hero         5. Delete hero");
+            System.out.println("6. Add equipment    7. Delete equipment");
+            System.out.println("8. Add team         9. Delete team");
+            System.out.println("10. Delete match");
+            System.out.println("0. Back");
+            int c = InputHelper.readInt("Choose: ");
+            switch (c) {
+                case 1: addPlayer(); break;
+                case 2: deletePlayer(); break;
+                case 3: editPlayer(); break;
+                case 4: addHero(); break;
+                case 5: deleteHero(); break;
+                case 6: addEquipment(); break;
+                case 7: deleteEquipment(); break;
+                case 8: addTeam(); break;
+                case 9: deleteTeam(); break;
+                case 10: deleteMatch(); break;
+                case 0: return;
+                default: System.out.println("Invalid choice.");
+            }
+        }
+    }
+
+    private static void addPlayer() {
+        String id = InputHelper.readString("New player id: ");
+        String name = InputHelper.readString("Name: ");
+        String username = InputHelper.readString("Username: ");
+        String password = InputHelper.readString("Password: ");
+        int level = InputHelper.readInt("Level: ");
+        double winRate = InputHelper.readDouble("Win rate (0.0 - 1.0): ");
+        String teamId = InputHelper.readString("Team id: ");
+        try {
+            Player p = new Player(id, name, username, password, level, winRate, teamId);
+            data.addPlayer(p);                       // throws DuplicateIdException if id taken
+            Team t = data.getTeam(teamId);
+            if (t != null) t.addPlayer(p);           // keep the team's member list consistent
+            System.out.println("Player added.");
+        } catch (DuplicateIdException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void deletePlayer() {
+        String id = InputHelper.readString("Player id to delete: ");
+        try {
+            data.deletePlayer(id);                   // throws RecordNotFoundException if missing
+            System.out.println("Player deleted.");
+        } catch (RecordNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void editPlayer() {
+        String id = InputHelper.readString("Player id to edit: ");
+        Player p = data.getPlayer(id);
+        if (p == null) {
+            System.out.println("Player not found: " + id);
+            return;
+        }
+        System.out.println("Editing " + p.getName() + ":");
+        p.setLevel(InputHelper.readInt("New level: "));
+        p.setWinRate(InputHelper.readDouble("New win rate (0.0 - 1.0): "));
+        System.out.println("Updated: " + p.getInfo());
+    }
+
+    private static void addHero() {
+        String id = InputHelper.readString("New hero id: ");
+        String name = InputHelper.readString("Name: ");
+        System.out.println("Types: TANK, MAGE, MARKSMAN, ASSASSIN, SUPPORT, WARRIOR");
+        String typeStr = InputHelper.readString("Type: ");
+        try {
+            HeroType type = HeroType.valueOf(typeStr.trim().toUpperCase());   // bad type -> IllegalArgumentException
+            Map<String, Integer> base = new LinkedHashMap<>();
+            base.put("hp", InputHelper.readInt("Base hp: "));
+            base.put("attack", InputHelper.readInt("Base attack: "));
+            base.put("defense", InputHelper.readInt("Base defense: "));
+            data.addHero(new Hero(id, name, type, base));
+            System.out.println("Hero added.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Invalid hero type.");
+        } catch (DuplicateIdException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void deleteHero() {
+        String id = InputHelper.readString("Hero id to delete: ");
+        try {
+            data.deleteHero(id);
+            System.out.println("Hero deleted.");
+        } catch (RecordNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void addEquipment() {
+        String id = InputHelper.readString("New equipment id: ");
+        String name = InputHelper.readString("Name: ");
+        System.out.println("Types: WEAPON, ARMOR, ACCESSORY, BOOTS");
+        String typeStr = InputHelper.readString("Type: ");
+        try {
+            EquipmentType type = EquipmentType.valueOf(typeStr.trim().toUpperCase());
+            Map<String, Integer> bonus = new LinkedHashMap<>();
+            bonus.put("attack", InputHelper.readInt("Attack bonus (0 if none): "));
+            int usage = InputHelper.readInt("Usage count: ");
+            double rating = InputHelper.readDouble("Average rating (0.0 - 5.0): ");
+            data.addEquipment(new Equipment(id, name, type, bonus, usage, rating));
+            System.out.println("Equipment added.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Invalid equipment type.");
+        } catch (DuplicateIdException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void deleteEquipment() {
+        String id = InputHelper.readString("Equipment id to delete: ");
+        try {
+            data.deleteEquipment(id);
+            System.out.println("Equipment deleted.");
+        } catch (RecordNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void addTeam() {
+        String id = InputHelper.readString("New team id: ");
+        String name = InputHelper.readString("Name: ");
+        int total = InputHelper.readInt("Total matches: ");
+        int wins = InputHelper.readInt("Wins: ");
+        try {
+            data.addTeam(new Team(id, name, total, wins));
+            System.out.println("Team added.");
+        } catch (DuplicateIdException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void deleteTeam() {
+        String id = InputHelper.readString("Team id to delete: ");
+        try {
+            data.deleteTeam(id);
+            System.out.println("Team deleted.");
+        } catch (RecordNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void deleteMatch() {
+        String id = InputHelper.readString("Match id to delete: ");
+        try {
+            data.deleteMatch(id);
+            System.out.println("Match deleted.");
+        } catch (RecordNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
     }
 }
