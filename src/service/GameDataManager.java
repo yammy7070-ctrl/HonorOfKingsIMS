@@ -67,8 +67,13 @@ public class GameDataManager {
     public Player getPlayer(String id) { return players.get(id); }
     public List<Player> getAllPlayers() { return new ArrayList<>(players.values()); }
     public void deletePlayer(String id) throws RecordNotFoundException {
-        if (!players.containsKey(id)) {
+        Player p = players.get(id);
+        if (p == null) {
             throw new RecordNotFoundException("Player not found: " + id);
+        }
+        Team team = teams.get(p.getTeamId());     // also remove from the team's member list
+        if (team != null) {
+            team.removePlayer(p);
         }
         players.remove(id);
     }
@@ -83,8 +88,12 @@ public class GameDataManager {
     public Hero getHero(String id) { return heroes.get(id); }
     public List<Hero> getAllHeroes() { return new ArrayList<>(heroes.values()); }
     public void deleteHero(String id) throws RecordNotFoundException {
-        if (!heroes.containsKey(id)) {
+        Hero h = heroes.get(id);
+        if (h == null) {
             throw new RecordNotFoundException("Hero not found: " + id);
+        }
+        for (Player p : players.values()) {        // remove it from every player's owned list
+            p.removeHero(h);
         }
         heroes.remove(id);
     }
@@ -99,8 +108,12 @@ public class GameDataManager {
     public Equipment getEquipment(String id) { return equipment.get(id); }
     public List<Equipment> getAllEquipment() { return new ArrayList<>(equipment.values()); }
     public void deleteEquipment(String id) throws RecordNotFoundException {
-        if (!equipment.containsKey(id)) {
+        Equipment e = equipment.get(id);
+        if (e == null) {
             throw new RecordNotFoundException("Equipment not found: " + id);
+        }
+        for (Hero h : heroes.values()) {           // remove it from every hero's equipped list
+            h.unequip(e);
         }
         equipment.remove(id);
     }
