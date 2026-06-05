@@ -72,6 +72,20 @@ public class Player extends Person implements Searchable, Persistable {
                 String.valueOf(level), String.valueOf(winRate), teamId, ids.toString());
     }
     // NOTE: fromFileFormat(...) and hero re-linking are implemented in Step 7.
+    // --- read back from file (static factory) ---
+    // Format: id|name|username|password|level|winRate|teamId|ownedHeroIds
+    // Owned heroes are linked later by FileStorageService (two-pass load).
+    public static Player fromFileFormat(String line) {
+        String[] parts = line.split("\\|", -1);
+        String id = parts[0];
+        String name = parts[1];
+        String username = parts[2];
+        String password = parts[3];
+        int level = Integer.parseInt(parts[4]);
+        double winRate = Double.parseDouble(parts[5]);
+        String teamId = parts[6];
+        return new Player(id, name, username, password, level, winRate, teamId);
+    }
 
     @Override
     public String toString() {

@@ -68,8 +68,32 @@ public class Equipment implements Searchable, Persistable {
                 equipmentId, name, equipmentType.name(),
                 stats.toString(), String.valueOf(usageCount), String.valueOf(averageRating));
     }
+
     // NOTE: the matching static fromFileFormat(...) factory is added in Step 7
     // (FileStorageService), where the full data set is available for re-linking.
+    // --- read back from file (static factory) ---
+    // Format: equipmentId|name|equipmentType|statBonus|usageCount|averageRating
+    public static Equipment fromFileFormat(String line) {
+        String[] parts = line.split("\\|", -1);
+        String id = parts[0];
+        String name = parts[1];
+        EquipmentType type = EquipmentType.valueOf(parts[2]);
+        Map<String, Integer> stats = parseStats(parts[3]);
+        int usage = Integer.parseInt(parts[4]);
+        double rating = Double.parseDouble(parts[5]);
+        return new Equipment(id, name, type, stats, usage, rating);
+    }
+
+    /** Parses "attack:50;defense:20" into a stat map. */
+    private static Map<String, Integer> parseStats(String s) {
+        Map<String, Integer> map = new LinkedHashMap<>();
+        if (s == null || s.isEmpty()) return map;
+        for (String pair : s.split(";")) {
+            String[] kv = pair.split(":");
+            map.put(kv[0], Integer.parseInt(kv[1]));
+        }
+        return map;
+    }
 
     @Override
     public String toString() {

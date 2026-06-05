@@ -86,6 +86,28 @@ public class Hero implements Searchable, Persistable {
         return String.join("|", heroId, name, heroType.name(), stats.toString(), ids.toString());
     }
     // NOTE: fromFileFormat(...) and equipment re-linking are implemented in Step 7.
+    // --- read back from file (static factory) ---
+    // Format: heroId|name|heroType|baseStats|equippedItemIds
+    // Equipment links are restored later by FileStorageService (two-pass load).
+    public static Hero fromFileFormat(String line) {
+        String[] parts = line.split("\\|", -1);
+        String id = parts[0];
+        String name = parts[1];
+        HeroType type = HeroType.valueOf(parts[2]);
+        Map<String, Integer> base = parseStats(parts[3]);
+        return new Hero(id, name, type, base);
+    }
+
+    /** Parses "hp:3000;attack:200" into a stat map. */
+    private static Map<String, Integer> parseStats(String s) {
+        Map<String, Integer> map = new LinkedHashMap<>();
+        if (s == null || s.isEmpty()) return map;
+        for (String pair : s.split(";")) {
+            String[] kv = pair.split(":");
+            map.put(kv[0], Integer.parseInt(kv[1]));
+        }
+        return map;
+    }
 
     @Override
     public String toString() {

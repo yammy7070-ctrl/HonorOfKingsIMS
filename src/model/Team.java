@@ -90,6 +90,17 @@ public class Team implements Searchable, Persistable {
                 teamId, name, String.valueOf(totalMatches), String.valueOf(wins), ids.toString());
     }
     // NOTE: fromFileFormat(...) and member re-linking are implemented in Step 7.
+    // --- read back from file (static factory) ---
+    // Format: teamId|name|totalMatches|wins|memberIds
+    // Members are linked later by FileStorageService (two-pass load).
+    public static Team fromFileFormat(String line) {
+        String[] parts = line.split("\\|", -1);
+        String id = parts[0];
+        String name = parts[1];
+        int total = Integer.parseInt(parts[2]);
+        int wins = Integer.parseInt(parts[3]);
+        return new Team(id, name, total, wins);
+    }
 
     @Override
     public String toString() {
