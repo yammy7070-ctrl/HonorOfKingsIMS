@@ -101,6 +101,7 @@ public class RankingService {
 
     // ---------- private helpers ----------
     private List<Player> topN(List<Player> list, int n) {
+        if (n < 0) n = 0;                          // guard against a negative count
         if (list.size() > n) return new ArrayList<>(list.subList(0, n));
         return list;
     }

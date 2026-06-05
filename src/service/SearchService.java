@@ -54,6 +54,7 @@ public class SearchService {
 
     /** Returns the last n matches a player took part in, newest first. */
     public List<MatchRecord> getRecentMatchesForPlayer(Player player, int n) {
+        if (n < 0) n = 0;
         List<MatchRecord> found = new ArrayList<>();
         for (MatchRecord m : data.getAllMatches()) {
             if (m.involvesPlayer(player)) {
@@ -69,6 +70,7 @@ public class SearchService {
 
     /** Returns the last n matches a team took part in, newest first. */
     public List<MatchRecord> getRecentMatchesForTeam(Team team, int n) {
+        if (n < 0) n = 0;
         List<MatchRecord> found = new ArrayList<>();
         for (MatchRecord m : data.getAllMatches()) {
             if (m.getTeam1() == team || m.getTeam2() == team) {
