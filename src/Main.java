@@ -91,6 +91,7 @@ public class Main {
         System.out.println("5. Match history");
         System.out.println("6. Leaderboard");
         System.out.println("7. Data management (add / delete / edit)");
+        System.out.println("8. Battle simulator");
         System.out.println("0. Log out");
         int choice = InputHelper.readInt("Choose: ");
         switch (choice) {
@@ -101,6 +102,7 @@ public class Main {
             case 5: matchHistory(); break;
             case 6: leaderboard(); break;
             case 7: dataManagement(); break;
+            case 8: combatSimulation(); break;
             case 0: return 0;
             default: System.out.println("Invalid choice.");
         }
@@ -118,6 +120,7 @@ public class Main {
         System.out.println("5. Equipment statistics");
         System.out.println("6. My match history");
         System.out.println("7. Leaderboard");
+        System.out.println("8. Battle simulator");
         System.out.println("0. Log out");
         int choice = InputHelper.readInt("Choose: ");
         switch (choice) {
@@ -128,6 +131,7 @@ public class Main {
             case 5: equipmentStatistics(); break;
             case 6: myMatchHistory(me); break;
             case 7: leaderboard(); break;
+            case 8: combatSimulation(); break;
             case 0: return 0;
             default: System.out.println("Invalid choice.");
         }
@@ -269,6 +273,16 @@ public class Main {
             System.out.printf("%2d. %-12s level=%-3d winRate=%s matches=%d%n",
                     rank++, p.getName(), p.getLevel(),
                     ConsoleUtil.formatPercent(p.getWinRate()), ranking.countMatches(p));
+        }
+    }
+    private static void combatSimulation() {
+        ConsoleUtil.printTitle("Battle Simulator");
+        try {
+            Hero h1 = search.searchHero(InputHelper.readString("First hero name or id: "));
+            Hero h2 = search.searchHero(InputHelper.readString("Second hero name or id: "));
+            new service.CombatSimulator().simulate(h1, h2);
+        } catch (RecordNotFoundException e) {
+            System.out.println(e.getMessage());
         }
     }
 
