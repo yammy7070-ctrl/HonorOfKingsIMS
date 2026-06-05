@@ -15,9 +15,8 @@ import service.RankingService;
 import service.SearchService;
 import util.ConsoleUtil;
 import util.InputHelper;
-
 import java.util.List;
-
+import service.FileStorageService;
 /**
  * Console entry point. Shows a login screen, then an Admin or Player menu
  * depending on the role of the logged-in user, and routes each choice to the
@@ -25,14 +24,22 @@ import java.util.List;
  */
 public class Main {
 
+
     private static GameDataManager data;
     private static AuthenticationService auth;
     private static SearchService search;
     private static RankingService ranking;
+    private static FileStorageService storage;
 
     public static void main(String[] args) {
         data = GameDataManager.getInstance();
-        data.loadInitialData();
+        storage = new FileStorageService(data);
+        if (storage.dataFilesExist()) {
+            storage.loadAllData();               // saved data exists -> load it
+        } else {
+            data.loadInitialData();              // first run -> use the initial dataset
+            System.out.println("No saved data found. Loaded the initial dataset.");
+        }
         auth = new AuthenticationService(data);
         search = new SearchService(data);
         ranking = new RankingService(data);
@@ -289,6 +296,7 @@ public class Main {
             System.out.println("6. Add equipment    7. Delete equipment");
             System.out.println("8. Add team         9. Delete team");
             System.out.println("10. Delete match");
+            System.out.println("11. Save all data to files");
             System.out.println("0. Back");
             int c = InputHelper.readInt("Choose: ");
             switch (c) {
@@ -302,6 +310,7 @@ public class Main {
                 case 8: addTeam(); break;
                 case 9: deleteTeam(); break;
                 case 10: deleteMatch(); break;
+                case 11: storage.saveAllData(); break;
                 case 0: return;
                 default: System.out.println("Invalid choice.");
             }
