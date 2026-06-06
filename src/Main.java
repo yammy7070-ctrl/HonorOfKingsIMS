@@ -121,6 +121,7 @@ public class Main {
         System.out.println("6. My match history");
         System.out.println("7. Leaderboard");
         System.out.println("8. Battle simulator");
+        System.out.println("9. Edit my profile (name / password)");
         System.out.println("0. Log out");
         int choice = InputHelper.readInt("Choose: ");
         switch (choice) {
@@ -132,6 +133,7 @@ public class Main {
             case 6: myMatchHistory(me); break;
             case 7: leaderboard(); break;
             case 8: combatSimulation(); break;
+            case 9: editMyProfile(me); break;
             case 0: return 0;
             default: System.out.println("Invalid choice.");
         }
@@ -195,6 +197,10 @@ public class Main {
             } else {
                 for (Player o : owners) System.out.println("  - " + o.getName());
             }
+            Equipment rec = recommendEquipment(h);
+            System.out.println("Recommended equipment: "
+                    + (rec == null ? "none available"
+                    : rec.getName() + " (" + rec.getEquipmentType() + ", rating " + rec.getAverageRating() + ")"));
         } catch (RecordNotFoundException e) {
             System.out.println(e.getMessage());
         }
@@ -221,10 +227,10 @@ public class Main {
         try {
             if (c == 1) {
                 Player p = search.searchPlayer(InputHelper.readString("Player id or name: "));
-                printMatches(search.getRecentMatchesForPlayer(p, n), p);
+                printMatches(search.getRecentMatchesForPlayer(p, n), p,null);
             } else if (c == 2) {
                 Team t = search.searchTeam(InputHelper.readString("Team id or name: "));
-                printMatches(search.getRecentMatchesForTeam(t, n), null);
+                printMatches(search.getRecentMatchesForTeam(t, n), null,t);
             } else {
                 System.out.println("Invalid choice.");
             }
@@ -236,20 +242,41 @@ public class Main {
     private static void myMatchHistory(Player me) {
         int n = InputHelper.readInt("How many recent matches? ");
         ConsoleUtil.printTitle("My recent matches");
-        printMatches(search.getRecentMatchesForPlayer(me, n), me);
+        printMatches(search.getRecentMatchesForPlayer(me, n), me,null);
     }
 
-    private static void printMatches(List<MatchRecord> matches, Player forPlayer) {
+    private static void printMatches(List<MatchRecord> matches, Player forPlayer, Team forTeam) {
         if (matches.isEmpty()) {
             System.out.println("No matches found.");
             return;
         }
+        int wins = 0, losses = 0, draws = 0;
+        Map<String, Integer> pickCount = new LinkedHashMap<>();
         for (MatchRecord m : matches) {
             System.out.println(m.generateReport());
+            Team side = null;
             if (forPlayer != null) {
                 Hero picked = m.getPlayerPerformance(forPlayer);
                 System.out.println("    " + forPlayer.getName() + " picked: "
                         + (picked == null ? "did not play" : picked.getName()));
+                if (picked != null) pickCount.merge(picked.getName(), 1, Integer::sum);
+                side = m.getTeam1Picks().containsKey(forPlayer) ? m.getTeam1() : m.getTeam2();
+            } else if (forTeam != null) {
+                side = forTeam;
+            }
+            if (side != null) {
+                Team winner = m.getWinner();
+                if (winner == null) draws++;
+                else if (winner == side) wins++;
+                else losses++;
+            }
+        }
+        System.out.println("Record: " + wins + " wins, " + losses + " losses, " + draws + " draws");
+        if (forPlayer != null && !pickCount.isEmpty()) {
+            System.out.println("Hero pick rate (out of " + matches.size() + " matches):");
+            for (Map.Entry<String, Integer> e : pickCount.entrySet()) {
+                System.out.printf("  %s: %d (%.0f%%)%n",
+                        e.getKey(), e.getValue(), 100.0 * e.getValue() / matches.size());
             }
         }
     }
@@ -294,6 +321,14 @@ public class Main {
         for (Hero h : me.getOwnedHeroes()) {
             System.out.println("  - " + h.getName() + " " + h.getEquippedItems());
         }
+    }
+    private static void editMyProfile(Player me) {
+        ConsoleUtil.printTitle("Edit My Profile (limited)");
+        String newName = InputHelper.readString("New display name (blank to keep \"" + me.getName() + "\"): ");
+        if (!newName.isEmpty()) me.setName(newName);
+        String newPassword = InputHelper.readString("New password (blank to keep): ");
+        if (!newPassword.isEmpty()) me.setPassword(newPassword);
+        System.out.println("Profile updated: " + me.getInfo());
     }
 
     // ---------------- helper ----------------
@@ -463,6 +498,31 @@ public class Main {
             System.out.println("Match deleted.");
         } catch (RecordNotFoundException e) {
             System.out.println(e.getMessage());
+        }
+    }
+    private static Equipment recommendEquipment(Hero hero) {
+        EquipmentType preferred = preferredType(hero.getHeroType());
+        Equipment best = null;
+        for (Equipment e : data.getAllEquipment()) {
+            if (e.getEquipmentType() == preferred) {
+                if (best == null || e.getAverageRating() > best.getAverageRating()) {
+                    best = e;
+                }
+            }
+        }
+        return best;
+    }
+
+    /** Simple rule: pick an equipment type that suits the hero's role. */
+    private static EquipmentType preferredType(HeroType type) {
+        switch (type) {
+            case MARKSMAN:
+            case ASSASSIN:
+            case WARRIOR:  return EquipmentType.WEAPON;
+            case MAGE:     return EquipmentType.ACCESSORY;
+            case TANK:
+            case SUPPORT:  return EquipmentType.ARMOR;
+            default:       return EquipmentType.WEAPON;
         }
     }
 }
